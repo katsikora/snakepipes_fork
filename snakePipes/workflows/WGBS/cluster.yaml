@@ -17,7 +17,7 @@ methyl_extract:
 prep_for_stats:
     memory: 30G
 CpG_stats:
-    memory: 30G
+    memory: 50G
 cleanup_metilene:
     memory: 20G
 intAgg_stats:
@@ -30,3 +30,5 @@ CpG_report:
     memory: 3G
 intAgg_report:
     memory: 6G
+bedGraphToBigWig:
+    memory: 3G
