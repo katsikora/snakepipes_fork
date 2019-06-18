@@ -622,7 +622,7 @@ if sampleSheet:
             err="aux_files/logs/get_CG_metilene.err"
         threads: 1
         conda: CONDA_WGBS_ENV
-        shell: "bedtools intersect -wa -a {input.imdF} -b {input.MetBed} > {output.MetCG}  2>{log.err}"
+        shell: "bedtools intersect -wa -a {input.imdF} -b <(awk \`{{ if ( $2 < $3 ) print $0 }}\` {input.MetBed} ) > {output.MetCG}  2>{log.err}"
 
 
     rule cleanup_metilene:
