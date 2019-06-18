@@ -480,7 +480,7 @@ else:
             out="methXT/logs/{sample}.methyl_extract.out"
         threads: nthreads
         conda: CONDA_WGBS_ENV
-        shell: "MethylDackel extract  -o {params.OUTpfx} -q 10 -p 20 {params.mbias_ignore} --minDepth 10 --mergeContext --maxVariantFrac 0.25 --minOppositeDepth 5 -@ {threads} {input.refG} " + os.path.join(outdir,"{input.rmDupbam}") + " 1>{log.out} 2>{log.err}"
+        shell: "MethylDackel extract  -o {params.OUTpfx} -q 10 -p 20 --nOT {params.mbias_ignore},{params.mbias_ignore},{params.mbias_ignore},{params.mbias_ignore} --nOB {params.mbias_ignore},{params.mbias_ignore},{params.mbias_ignore},{params.mbias_ignore} --minDepth 10 --mergeContext --maxVariantFrac 0.25 --minOppositeDepth 5 -@ {threads} {input.refG} " + os.path.join(outdir,"{input.rmDupbam}") + " 1>{log.out} 2>{log.err}"
 
 if blackList is None:
     rule CpG_filt:
