@@ -31,4 +31,4 @@ CpG_report:
 intAgg_report:
     memory: 6G
 bedGraphToBigWig:
-    memory: 3G
+    memory: 10G

@@ -216,19 +216,19 @@ rule get_ran_CG:
     conda: CONDA_SHARED_ENV
     shell: 'set +o pipefail; ' + os.path.join(workflow_tools,'methylCtools') + " fapos {input.refG}  " + re.sub('.gz','',"{output.pozF}") + ';cat '+ re.sub('.gz','',"{output.pozF}") +' | grep "+" -' + " | shuf | head -n 1000000 | awk {params.awkCmd}" + ' - | tr " " "\\t" | sort -k 1,1 -k2,2n - > ' + "{output.ranCG} 2>{log.err}"
 
-
-rule calc_Mbias:
-    input:
-        refG=refG,
-        rmDupBam="bams/{sample}"+bam_ext,
-        sbami="bams/{sample}"+bam_ext+".bai"
-    output:
-        mbiasTXT="QC_metrics/{sample}.Mbias.txt"
-    log:
-        out="QC_metrics/logs/{sample}.calc_Mbias.out"
-    threads: nthreads
-    conda: CONDA_WGBS_ENV
-    shell: "MethylDackel mbias {input.refG} {input.rmDupBam} {output.mbiasTXT} -@ {threads} 1>{log.out} 2>{output.mbiasTXT}"
+if mbias_ignore=='auto':
+    rule calc_Mbias:
+        input:
+            refG=refG,
+            rmDupBam="bams/{sample}"+bam_ext,
+            sbami="bams/{sample}"+bam_ext+".bai"
+        output:
+            mbiasTXT="QC_metrics/{sample}.Mbias.txt"
+        log:
+            out="QC_metrics/logs/{sample}.calc_Mbias.out"
+        threads: nthreads
+        conda: CONDA_WGBS_ENV
+        shell: "MethylDackel mbias {input.refG} {input.rmDupBam} {output.mbiasTXT} -@ {threads} 1>{log.out} 2>{output.mbiasTXT}"
 
 if convRef:
     rule calc_genome_size:
@@ -431,7 +431,7 @@ rule produce_report:
     input:
         calc_doc(intList,False,skipDOC),
         expand("QC_metrics/{sample}.conv.rate.txt",sample=samples) if not fromBam else [],
-        mbiasTXT=expand("QC_metrics/{sample}.Mbias.txt",sample=samples),
+        mbiasTXT=expand("QC_metrics/{sample}.Mbias.txt",sample=samples) if mbias_ignore=='auto' else [],
         fstat=expand("QC_metrics/{sample}.flagstat",sample=samples)
     output:
         QCrep='QC_metrics/QC_report.html'
@@ -606,7 +606,7 @@ if sampleSheet:
             err="{}/logs/run_metilene.err".format(get_outdir("metilene_out"))
         threads: nthreads
         conda: CONDA_WGBS_ENV
-        shell: 'Gi=($(cat {input.Ginfo}));metilene -a ' + " ${{Gi[0]}} " + " -b  ${{Gi[1]}} -M {params.maxD} -m {params.minCG} -d {params.minMD} -t {threads} {input.MetIN} | sort -k 1,1 -k2,2n > {output.MetBed} 2>{log.err}"
+        shell: 'Gi=($(cat {input.Ginfo}));metilene -a ' + " ${{Gi[0]}} " + " -b  ${{Gi[1]}} -M {params.maxD} -m {params.minCG} -d {params.minMD} -t {threads} {input.MetIN} | sort -k 1,1 -k2,2n | awk \'{{ if ( $2 < $3 ) print$0 }}\'  > {output.MetBed} 2>{log.err}"
 
 
     rule get_CG_metilene:
@@ -622,7 +622,7 @@ if sampleSheet:
             err="aux_files/logs/get_CG_metilene.err"
         threads: 1
         conda: CONDA_WGBS_ENV
-        shell: "bedtools intersect -wa -a {input.imdF} -b <(awk `{{ if ( $2 < $3 ) print $0 }}` {input.MetBed} ) > {output.MetCG}  2>{log.err}"
+        shell: "bedtools intersect -wa -a {input.imdF} -b {input.MetBed}  > {output.MetCG}  2>{log.err}"
 
 
     rule cleanup_metilene:

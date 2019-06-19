@@ -35,7 +35,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
     #load single CpG data, count NAs per row/CpG
     sCpGF<-commandArgs(trailingOnly=TRUE)[4]
     message(sprintf("loading %s",sCpGF))
-    require(data.table)
+    library(data.table)
     load(sCpGF)
 
     noNA<-apply(limdat.LG,1,function(X)sum(is.na(X)))
@@ -43,7 +43,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
     limdat.LG$NAf<-NAf
     colnames(limdat.LG)[colnames(limdat.LG) %in% "ms"]<-"Name"
 
-    require(GenomicRanges)
+    library(GenomicRanges)
 
     bedGR<-GRanges(seqnames=bedtab$CHROM,ranges=IRanges(start=bedtab$START,end=bedtab$END,names=paste(bedtab$CHROM,bedtab$START,bedtab$END,sep="_")))
     auxdat<-as.data.table(merge(x=auxbed,y=limdat.LG,by="Name",all.x=TRUE,sort=FALSE))
@@ -90,12 +90,12 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
     ####for differential interval methylation
     ### limma + ebayes + BH p value adjustment
 
-        require("limma")
-        require("car")
-        require("FactoMineR")
-        require("reshape2")
-        require("ggplot2")
-        require("dplyr")
+        library("limma")
+        library("car")
+        library("FactoMineR")
+        library("reshape2")
+        library("ggplot2")
+        library("dplyr")
 
         CGI.limdat.CC.logit<-logit(CGI.limdat.CC,percents=FALSE,adjust=0.025)
         x1<-PCA(CGI.limdat.CC,graph=FALSE)

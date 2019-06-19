@@ -164,6 +164,12 @@ def run_aggStats_report(intList,sampleSheet):
     else:
         return([])
 
+def get_mbias(mbias_ignore):
+    if mbias_ignore=='auto':
+        return(expand("QC_metrics/{sample}.Mbias.txt",sample=samples))
+    else:
+        return([])
+
 
 ### include modules of other snakefiles ########################################
 ##some rules depend on the definitions above
@@ -208,7 +214,7 @@ if not fromBam:
             expand("FASTQ_downsampled/{sample}{read}.fastq.gz", sample = samples, read = reads),
             convert_refG(convRef),
             expand("bams/{sample}.PCRrm.bam", sample = samples),
-            expand("QC_metrics/{sample}.Mbias.txt",sample=samples),
+            get_mbias(mbias_ignore),
             os.path.join("aux_files",re.sub('.fa','.poz.ran1M.sorted.bed',os.path.basename(refG))),
             calc_doc(intList,False,skipDOC),
             'QC_metrics/QC_report.html',
@@ -233,7 +239,7 @@ else:
         input:
             convert_refG(convRef),
             expand("bams/{sample}"+bam_ext, sample = samples),
-            expand("QC_metrics/{sample}.Mbias.txt",sample=samples),
+            get_mbias(mbias_ignore),
             os.path.join("aux_files",re.sub('.fa','.poz.ran1M.sorted.bed',os.path.basename(refG))),
             calc_doc(intList,False,skipDOC),
             'QC_metrics/QC_report.html',
