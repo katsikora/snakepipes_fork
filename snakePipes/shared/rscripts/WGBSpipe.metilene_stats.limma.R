@@ -133,6 +133,10 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         ggsave(paste0(bedshort,".Beta.MeanXgroup.metilene.violin.png"))
 
     #differential methylation
+        form_input<-commandArgs(trailingOnly=TRUE)[9]
+        con_input<-commandArgs(trailingOnly=TRUE)[10]
+        
+        if(form_input==""){
         design<-as.data.frame(matrix(ncol=2,nrow=(ncol(CGI.limdat.CC.logit))),stringsAsFactors=FALSE)
         colnames(design)<-c("Intercept","Group")
         rownames(design)<-colnames(CGI.limdat.CC.logit)
@@ -144,9 +148,22 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
             gp<-relevel(gp,ref="WT")
             design$Group<-as.numeric(gp)}else{design$Group<-as.numeric(factor(sampleSheet$condition))}
         design$Intercept<-1
-        design<-as.matrix(design)
+        design<-as.matrix(design)}else{
+            f<-as.formula(form_input)
+            design<-model.matrix(f,sampleSheet)
+            colnames(design)=gsub(':','_',colnames(design))
+        }
+        
+        print(design)
 
         fit<-lmFit(CGI.limdat.CC.logit,design)
+
+        if(con_input!=""){
+            ContMatrix<-makeContrasts(unquote(con_input),levels=design)
+            print(ContMatrix)
+            fit<-contrasts.fit(fit,ContMatrix)
+        }
+
         fit.eB<-eBayes(fit)
 
         ##read filters from commandline args

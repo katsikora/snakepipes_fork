@@ -62,6 +62,9 @@ minAbsDiff: 0.2
 FDR: 0.02
 ##dummy string to skip filtering annotation
 filter_annotation:
+##allow for custom design formula and 1 contrast
+formula:
+contrast:
 ################################################################################
 # Call snakemake directly, i.e. without using the wrapper script:
 #

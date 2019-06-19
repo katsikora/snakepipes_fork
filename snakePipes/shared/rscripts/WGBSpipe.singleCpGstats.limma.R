@@ -85,6 +85,10 @@ if(length(levels(limdat.LG.CC.Means$Group))==2){
 
 
     #limma
+    form_input<-commandArgs(trailingOnly=TRUE)[7]
+    con_input<-commandArgs(trailingOnly=TRUE)[8]
+
+    if(form_input==""){
     design<-as.data.frame(matrix(ncol=2,nrow=(ncol(limdat.LG.CC.logit))),stringsAsFactors=FALSE)
     colnames(design)<-c("Intercept","Group")
     rownames(design)<-colnames(limdat.LG.CC.logit)
@@ -98,9 +102,24 @@ if(length(levels(limdat.LG.CC.Means$Group))==2){
         design$Group<-as.numeric(gp)}
     else{design$Group<-as.numeric(factor(sampleSheet$condition))}
     design$Intercept<-1
-    design<-as.matrix(design)
+    design<-as.matrix(design)}else{
+            f<-as.formula(form_input)
+            design<-model.matrix(f,sampleSheet)
+            colnames(design)=gsub(':','_',colnames(design))
+        }
+        
+        print(design)
+
 
     fit<-lmFit(limdat.LG.CC.logit,design)
+
+    if(con_input!=""){
+        ContMatrix<-makeContrasts(unquote(con_input),levels=design)
+        print(ContMatrix)
+        fit<-contrasts.fit(fit,ContMatrix)
+        }
+
+
     fit.eB<-eBayes(fit)
 
 ##read filters from commandline args

@@ -562,13 +562,15 @@ if sampleSheet:
             sampleSheet=sampleSheet,
             diff=minAbsDiff,
             fdr=FDR,
-            importfunc = os.path.join(workflow_rscripts, "WGBSstats_functions.R")
+            importfunc = os.path.join(workflow_rscripts, "WGBSstats_functions.R"),
+            formula=formula if formula else "",
+            contrast=contrast if contrast else ""
         log:
             err='{}/logs/CpG_stats.err'.format(get_outdir("singleCpG_stats_limma")),
             out='{}/logs/CpG_stats.out'.format(get_outdir("singleCpG_stats_limma"))
         threads: 1
         conda: CONDA_WGBS_ENV
-        shell: "Rscript --no-save --no-restore " + os.path.join(workflow_rscripts,'WGBSpipe.singleCpGstats.limma.R ') + "{params.statdir} {params.sampleSheet} {params.datdir} {params.diff} {params.fdr} {params.importfunc} 1>{log.out} 2>{log.err}"
+        shell: "Rscript --no-save --no-restore " + os.path.join(workflow_rscripts,'WGBSpipe.singleCpGstats.limma.R ') + "{params.statdir} {params.sampleSheet} {params.datdir} {params.diff} {params.fdr} {params.importfunc} {params.formula} {params.contrast} 1>{log.out} 2>{log.err}"
 
 
     rule CpG_report:
@@ -640,13 +642,15 @@ if sampleSheet:
             DMRout=os.path.join(outdir,'{}'.format(get_outdir("metilene_out"))),
             diff=minAbsDiff,
             fdr=FDR,
-            importfunc = os.path.join(workflow_rscripts, "WGBSstats_functions.R")
+            importfunc = os.path.join(workflow_rscripts, "WGBSstats_functions.R"),
+            formula=formula if formula else "",
+            contrast=contrast if contrast else ""
         log:
             err="{}/logs/cleanup_metilene.err".format(get_outdir("metilene_out")),
             out="{}/logs/cleanup_metilene.out".format(get_outdir("metilene_out"))
         threads: 1
         conda: CONDA_WGBS_ENV
-        shell: 'Rscript --no-save --no-restore ' + os.path.join(workflow_rscripts,'WGBSpipe.metilene_stats.limma.R ') + "{params.DMRout} " + os.path.join(outdir,"{input.MetBed}") +' ' + os.path.join(outdir,"{input.MetCG}") + ' ' + os.path.join(outdir,"{input.Limdat}") + " {input.sampleSheet} {params.diff} {params.fdr} {params.importfunc} 1>{log.out} 2>{log.err}"
+        shell: 'Rscript --no-save --no-restore ' + os.path.join(workflow_rscripts,'WGBSpipe.metilene_stats.limma.R ') + "{params.DMRout} " + os.path.join(outdir,"{input.MetBed}") +' ' + os.path.join(outdir,"{input.MetCG}") + ' ' + os.path.join(outdir,"{input.Limdat}") + " {input.sampleSheet} {params.diff} {params.fdr} {params.importfunc} {params.formula} {params.contrast} 1>{log.out} 2>{log.err}"
 
 
     rule metilene_report:
