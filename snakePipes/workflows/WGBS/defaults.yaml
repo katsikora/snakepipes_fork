@@ -11,6 +11,7 @@
 # can be used in new/extended snakemake rules!
 ################################################################################
 ## General/Snakemake parameters, only used/set by wrapper or in Snakemake cmdl, but not in Snakefile
+pipeline: WGBS
 outdir:
 configfile:
 cluster_configfile:
@@ -59,6 +60,8 @@ minMethDiff: 0
 ###Thresholds for filtering of statistical comparisons:
 minAbsDiff: 0.2
 FDR: 0.02
+##dummy string to skip filtering annotation
+filter_annotation:
 ################################################################################
 # Call snakemake directly, i.e. without using the wrapper script:
 #

@@ -9,7 +9,7 @@ message(sprintf("working directory is %s",getwd()))
 
 options(stringsAsFactors=FALSE,na.rm=TRUE)
 
-importfunc<-commandArgs(trailingOnly=TRUE)[9]
+importfunc<-commandArgs(trailingOnly=TRUE)[8]
 source(importfunc)
 
 bedF<-commandArgs(trailingOnly=TRUE)[2]
@@ -150,8 +150,8 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         fit.eB<-eBayes(fit)
 
         ##read filters from commandline args
-        minAbsDiff<-as.numeric(commandArgs(trailingOnly=TRUE)[7])
-        fdr<-as.numeric(commandArgs(trailingOnly=TRUE)[8])
+        minAbsDiff<-as.numeric(commandArgs(trailingOnly=TRUE)[6])
+        fdr<-as.numeric(commandArgs(trailingOnly=TRUE)[7])
     
         tT<-topTable(fit.eB,2,p.value=1,number=Inf)
         tT$IntID<-rownames(tT)
@@ -194,39 +194,14 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
             CGI.bed.intT_filt<-CGI.bed.intT[CGI.bed.intT$adj.P.Val<fdr & abs(CGI.bed.intT$MeanDiff)>=minAbsDiff,]
             CGI.bed.intT_filt<-CGI.bed.intT_filt[!is.na(CGI.bed.intT_filt$CHROM),]
             if(nrow(CGI.bed.intT_filt)>0){
-            write.table(CGI.bed.intT_filt,file=paste0(bedshort,".limma_filtered.bed"),sep="\t",quote=FALSE,row.names=FALSE)}
+              write.table(CGI.bed.intT_filt,file=paste0(bedshort,".limma_filtered.bed"),sep="\t",quote=FALSE,row.names=FALSE)
+              CGI.bed.intT_filt.UP<-CGI.bed.intT_filt[CGI.bed.intT_filt$MeanDiff>=minAbsDiff&!is.na(CGI.bed.intT_filt$adj.P.Val),]
+              if(nrow(CGI.bed.intT_filt.UP)>0){write.table(CGI.bed.intT_filt.UP,file="metilene.limma_filtered.UP.bed",row.names=FALSE,col.names=FALSE,quote=FALSE,sep="\t")}else{system('touch metilene.limma_filtered.UP.bed')}
+              CGI.bed.intT_filt.DOWN<-CGI.bed.intT_filt[CGI.bed.intT_filt$MeanDiff<=(-minAbsDiff)&!is.na(CGI.bed.intT_filt$adj.P.Val),]
+              if(nrow(CGI.bed.intT_filt.DOWN)>0){write.table(CGI.bed.intT_filt.UP,file="metilene.limma_filtered.DOWN.bed",row.names=FALSE,col.names=FALSE,quote=FALSE,sep="\t")}else{system('touch metilene.limma_filtered.DOWN.bed')}
+            }else{system(paste0('touch ',bedshort,".limma_filtered.bed"))}
+                
 
-    ####### add nearest gene information
-            genMod<-commandArgs(trailingOnly=TRUE)[6]
-            if (genMod!='NA' & file.exists(genMod)){
-                message(sprintf("Processing gene models in %s",genMod))
-
-                system(paste0('mkdir -p ',file.path(wdir,"temp")))
-
-                system(paste0('bedtools sort -i ', genMod,'  > ' ,wdir ,'/temp/genes.sorted.bed'))
-                system(paste0('sed -i \'/CHROM/d\' ',wdir,'/',bedshort,".limma_unfiltered.bed"))
-                system(paste0('bedtools sort -i ',wdir,'/', bedshort,".limma_unfiltered.bed",' > ',wdir,'/temp/',bedshort,".limma.sorted.bed"))
-
-                system(paste0('bedtools closest -D b -a ',wdir,'/temp/',bedshort,".limma.sorted.bed",' -b ', wdir ,'/temp/genes.sorted.bed',' > ',wdir,'/temp/',bedshort,'.limma.closest.bed'))
-
-                DMR.filt.an<-fread(paste0(wdir,'/temp/',bedshort,'.limma.closest.bed'),header=FALSE,sep="\t")
-                DMR.filt.an<-DMR.filt.an[,c(1:17,18:21,23,30),with=FALSE]
-                colnames(DMR.filt.an)<-c(colnames(CGI.bed.intT),"ChrEns","StartEns","EndEns","ENST","StrandEns","Dist")
-
-                library(biomaRt)
-                emv<-c("ENSDART"="drerio","ENSMUST"="mmusculus","ENSG"="hsapiens","FBtr"="dmelanogaster")
-                ems<-emv[grep(gsub("[0-9].+","",DMR.filt.an$ENST[1]),names(emv))]
-                ens.xx<-useMart(biomart="ensembl",dataset=paste0(ems,"_gene_ensembl"))
-                DMR.filt.an$ENST<-gsub("\\.[0-9].$","",DMR.filt.an$ENST)
-                bm<-getBM(attributes=c("ensembl_gene_id","ensembl_transcript_id","external_gene_name","description"),filters="ensembl_transcript_id",values=DMR.filt.an$ENST,mart=ens.xx)
-
-                DMR.filt.an2<-merge(x=DMR.filt.an,y=bm,by.x="ENST",by.y="ensembl_transcript_id",all.x=TRUE,allow.cartesian=TRUE)
-                write.table(DMR.filt.an2,file="metilene.limma.annotated_unfiltered.txt",row.names=FALSE,quote=FALSE,sep="\t")
-                DMR.filt.an2.pos<-DMR.filt.an2[DMR.filt.an2$MeanDiff>=minAbsDiff&!is.na(DMR.filt.an2$adj.P.Val),]
-                if(nrow(DMR.filt.an2.pos)>0){write.table(DMR.filt.an2.pos,file="metilene.limma.annotated_filtered.UP.txt",row.names=FALSE,quote=FALSE,sep="\t")}
-                DMR.filt.an2.neg<-DMR.filt.an2[DMR.filt.an2$MeanDiff<=(-minAbsDiff)&!is.na(DMR.filt.an2$adj.P.Val),] 
-                if(nrow(DMR.filt.an2.neg)>0){write.table(DMR.filt.an2.neg,file="metilene.limma.annotated_filtered.DOWN.txt",row.names=FALSE,quote=FALSE,sep="\t")}
-            } else {print_sessionInfo("No gene models file was provided.")}
         print_sessionInfo("Analysis completed succesfully.")
         } # end if tT_filt has at least 1 row
     } # end if any intervals passed filtering

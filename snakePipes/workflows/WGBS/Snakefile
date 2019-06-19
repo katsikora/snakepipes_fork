@@ -135,7 +135,7 @@ def run_CpG_stats(sampleSheet):
 
 def run_metilene_all(sampleSheet):
     if sampleSheet:
-        return (['{}/singleCpG.metilene.limma_unfiltered.bed'.format(get_outdir("metilene_out")),'{}/metilene.limma.annotated_unfiltered.txt'.format(get_outdir("metilene_out")),'{}/Stats_report.html'.format(get_outdir("metilene_out"))])
+        return (['{}/singleCpG.metilene.limma_unfiltered.bed'.format(get_outdir("metilene_out")),expand("AnnotatedResults_{}".format(sample_name)+"/Filtered.results.{change_dir}_withNearestGene.txt",change_dir=change_direction),'{}/Stats_report.html'.format(get_outdir("metilene_out"))])
     else:
         return ([])
 
@@ -183,6 +183,10 @@ include: os.path.join(maindir, "shared", "rules", "WGBS.snakefile")
 
 # non-rule operations specific to the workflow
 include: os.path.join(workflow.basedir, "internals.snakefile")
+
+if sampleSheet:
+    include: os.path.join(maindir, "shared", "rules", "nearestGene.snakefile")
+    include: os.path.join(maindir, "shared", "rules", "filter_annotation.snakefile")
 
 
 ### execute before workflow starts #############################################

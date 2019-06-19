@@ -34,6 +34,8 @@ if(any(is.na(size_v),sum(size_v==0)>0)){message('Some of the input files are non
         ibed_tab$GeneSymbol<-gs_tab$V2[match(ibed_tab$GeneID,gs_tab$V1)]
         obed_tab<-unique(subset(ibed_tab,select=c(paste0("V",c(1:15,20,21)),"GeneID","GeneSymbol")))
         colnames(obed_tab)<-c("Chromosome","Start","End","Width","Strand","Score","nWindows","logFC.up","logFC.down","PValue","FDR","direction","best.logFC","best.start","Name","GeneStrand","Distance","GeneID","GeneSymbol")
+    }else if (pipeline %in% "WGBS"){
+
     }
 
 

@@ -3,6 +3,8 @@ import re
 from operator import is_not
 import tempfile
 
+change_direction= ["UP","DOWN"]
+
 ### hack until Devon's refactoring of WGBS is merged
 tempdir=outdir
 
@@ -633,10 +635,9 @@ if sampleSheet:
             sampleSheet=sampleSheet
         output:
             LimBed='{}/singleCpG.metilene.limma_unfiltered.bed'.format(get_outdir("metilene_out")),
-            LimAnnot='{}/metilene.limma.annotated_unfiltered.txt'.format(get_outdir("metilene_out"))
+            splitbed=expand("{}".format(get_outdir("metilene_out"))+"/metilene.limma_filtered.{change_dir}.bed",change_dir=change_direction)
         params:
             DMRout=os.path.join(outdir,'{}'.format(get_outdir("metilene_out"))),
-            gene_mod=genes_bed,
             diff=minAbsDiff,
             fdr=FDR,
             importfunc = os.path.join(workflow_rscripts, "WGBSstats_functions.R")
@@ -645,7 +646,7 @@ if sampleSheet:
             out="{}/logs/cleanup_metilene.out".format(get_outdir("metilene_out"))
         threads: 1
         conda: CONDA_WGBS_ENV
-        shell: 'Rscript --no-save --no-restore ' + os.path.join(workflow_rscripts,'WGBSpipe.metilene_stats.limma.R ') + "{params.DMRout} " + os.path.join(outdir,"{input.MetBed}") +' ' + os.path.join(outdir,"{input.MetCG}") + ' ' + os.path.join(outdir,"{input.Limdat}") + " {input.sampleSheet} {params.gene_mod} {params.diff} {params.fdr} {params.importfunc} 1>{log.out} 2>{log.err}"
+        shell: 'Rscript --no-save --no-restore ' + os.path.join(workflow_rscripts,'WGBSpipe.metilene_stats.limma.R ') + "{params.DMRout} " + os.path.join(outdir,"{input.MetBed}") +' ' + os.path.join(outdir,"{input.MetCG}") + ' ' + os.path.join(outdir,"{input.Limdat}") + " {input.sampleSheet} {params.diff} {params.fdr} {params.importfunc} 1>{log.out} 2>{log.err}"
 
 
     rule metilene_report:
