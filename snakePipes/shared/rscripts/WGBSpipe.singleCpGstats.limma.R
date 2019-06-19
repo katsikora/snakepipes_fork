@@ -87,22 +87,23 @@ if(length(levels(limdat.LG.CC.Means$Group))==2){
     #limma
     form_input<-commandArgs(trailingOnly=TRUE)[7]
     con_input<-commandArgs(trailingOnly=TRUE)[8]
+    print(form_input)
+    print(con_input)
 
     if(form_input==""){
-    design<-as.data.frame(matrix(ncol=2,nrow=(ncol(limdat.LG.CC.logit))),stringsAsFactors=FALSE)
-    colnames(design)<-c("Intercept","Group")
-    rownames(design)<-colnames(limdat.LG.CC.logit)
-    if("Control" %in% sampleSheet$condition){
+      design<-as.data.frame(matrix(ncol=2,nrow=(ncol(limdat.LG.CC.logit))),stringsAsFactors=FALSE)
+      colnames(design)<-c("Intercept","Group")
+      rownames(design)<-colnames(limdat.LG.CC.logit)
+      if("Control" %in% sampleSheet$condition){
         gp<-factor(sampleSheet$condition[match(colnames(limdat.LG.CC.logit),sampleSheet$name)])
         gp<-relevel(gp,ref="Control")
         design$Group<-as.numeric(gp)}
-    else if("WT" %in% sampleSheet$condition){
+      else if("WT" %in% sampleSheet$condition){
         gp<-factor(sampleSheet$condition[match(colnames(limdat.LG.CC.logit),sampleSheet$name)])
         gp<-relevel(gp,ref="WT")
-        design$Group<-as.numeric(gp)}
-    else{design$Group<-as.numeric(factor(sampleSheet$condition))}
-    design$Intercept<-1
-    design<-as.matrix(design)}else{
+        design$Group<-as.numeric(gp)}else{design$Group<-as.numeric(factor(sampleSheet$condition))}
+        design$Intercept<-1
+        design<-as.matrix(design)}else{
             f<-as.formula(form_input)
             design<-model.matrix(f,sampleSheet)
             colnames(design)=gsub(':','_',colnames(design))
@@ -114,7 +115,7 @@ if(length(levels(limdat.LG.CC.Means$Group))==2){
     fit<-lmFit(limdat.LG.CC.logit,design)
 
     if(con_input!=""){
-        ContMatrix<-makeContrasts(unquote(con_input),levels=design)
+        ContMatrix<-makeContrasts(noquote(con_input),levels=design)
         print(ContMatrix)
         fit<-contrasts.fit(fit,ContMatrix)
         }
@@ -126,7 +127,7 @@ if(length(levels(limdat.LG.CC.Means$Group))==2){
     minAbsDiff<-commandArgs(trailingOnly=TRUE)[4]
     fdr<-commandArgs(trailingOnly=TRUE)[5]
     
-    tT<-topTable(fit.eB,2,p.value=1,number=Inf)
+    if(con_input!=""){tT<-topTable(fit.eB,con_input,p.value=1,number=Inf)}else{tT<-topTable(fit.eB,2,p.value=1,number=Inf)}
     tT$IntID<-rownames(tT)
     plotdat<-melt(tT,measure.vars=c("P.Value","adj.P.Val"),value.name="pval",variable.name="Category",id.vars="IntID")
 

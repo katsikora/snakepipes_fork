@@ -137,18 +137,18 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         con_input<-commandArgs(trailingOnly=TRUE)[10]
         
         if(form_input==""){
-        design<-as.data.frame(matrix(ncol=2,nrow=(ncol(CGI.limdat.CC.logit))),stringsAsFactors=FALSE)
-        colnames(design)<-c("Intercept","Group")
-        rownames(design)<-colnames(CGI.limdat.CC.logit)
-        if("Control" %in% sampleSheet$condition){
+          design<-as.data.frame(matrix(ncol=2,nrow=(ncol(CGI.limdat.CC.logit))),stringsAsFactors=FALSE)
+          colnames(design)<-c("Intercept","Group")
+          rownames(design)<-colnames(CGI.limdat.CC.logit)
+          if("Control" %in% sampleSheet$condition){
             gp<-factor(sampleSheet$condition[match(colnames(CGI.limdat.CC.logit),sampleSheet$name)])
             gp<-relevel(gp,ref="Control")
             design$Group<-as.numeric(gp)} else if("WT" %in% sampleSheet$condition){
             gp<-factor(sampleSheet$condition[match(colnames(CGI.limdat.CC.logit),sampleSheet$name)])
             gp<-relevel(gp,ref="WT")
             design$Group<-as.numeric(gp)}else{design$Group<-as.numeric(factor(sampleSheet$condition))}
-        design$Intercept<-1
-        design<-as.matrix(design)}else{
+          design$Intercept<-1
+          design<-as.matrix(design)}else{
             f<-as.formula(form_input)
             design<-model.matrix(f,sampleSheet)
             colnames(design)=gsub(':','_',colnames(design))
@@ -159,7 +159,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         fit<-lmFit(CGI.limdat.CC.logit,design)
 
         if(con_input!=""){
-            ContMatrix<-makeContrasts(unquote(con_input),levels=design)
+            ContMatrix<-makeContrasts(noquote(con_input),levels=design)
             print(ContMatrix)
             fit<-contrasts.fit(fit,ContMatrix)
         }
@@ -170,7 +170,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         minAbsDiff<-as.numeric(commandArgs(trailingOnly=TRUE)[6])
         fdr<-as.numeric(commandArgs(trailingOnly=TRUE)[7])
     
-        tT<-topTable(fit.eB,2,p.value=1,number=Inf)
+        if(con_input!=""){tT<-topTable(fit.eB,con_input,p.value=1,number=Inf)}else{tT<-topTable(fit.eB,2,p.value=1,number=Inf)}
         tT$IntID<-rownames(tT)
         plotdat<-melt(tT,measure.vars=c("P.Value","adj.P.Val"),value.name="pval",variable.name="Category",id.vars="IntID")
 
