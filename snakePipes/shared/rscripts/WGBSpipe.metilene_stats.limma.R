@@ -198,7 +198,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
               CGI.bed.intT_filt.UP<-CGI.bed.intT_filt[CGI.bed.intT_filt$MeanDiff>=minAbsDiff&!is.na(CGI.bed.intT_filt$adj.P.Val),]
               if(nrow(CGI.bed.intT_filt.UP)>0){write.table(CGI.bed.intT_filt.UP,file="metilene.limma_filtered.UP.bed",row.names=FALSE,col.names=FALSE,quote=FALSE,sep="\t")}else{system('touch metilene.limma_filtered.UP.bed')}
               CGI.bed.intT_filt.DOWN<-CGI.bed.intT_filt[CGI.bed.intT_filt$MeanDiff<=(-minAbsDiff)&!is.na(CGI.bed.intT_filt$adj.P.Val),]
-              if(nrow(CGI.bed.intT_filt.DOWN)>0){write.table(CGI.bed.intT_filt.UP,file="metilene.limma_filtered.DOWN.bed",row.names=FALSE,col.names=FALSE,quote=FALSE,sep="\t")}else{system('touch metilene.limma_filtered.DOWN.bed')}
+              if(nrow(CGI.bed.intT_filt.DOWN)>0){write.table(CGI.bed.intT_filt.DOWN,file="metilene.limma_filtered.DOWN.bed",row.names=FALSE,col.names=FALSE,quote=FALSE,sep="\t")}else{system('touch metilene.limma_filtered.DOWN.bed')}
             }else{system(paste0('touch ',bedshort,".limma_filtered.bed"))}
                 
 
