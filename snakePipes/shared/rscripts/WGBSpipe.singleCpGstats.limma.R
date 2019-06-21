@@ -124,8 +124,8 @@ if(length(levels(limdat.LG.CC.Means$Group))==2){
     fit.eB<-eBayes(fit)
 
 ##read filters from commandline args
-    minAbsDiff<-commandArgs(trailingOnly=TRUE)[4]
-    fdr<-commandArgs(trailingOnly=TRUE)[5]
+    minAbsDiff<-as.numeric(commandArgs(trailingOnly=TRUE)[4])
+    fdr<-as.numeric(commandArgs(trailingOnly=TRUE)[5])
     
     if(con_input!=""){tT<-topTable(fit.eB,con_input,p.value=1,number=Inf)}else{tT<-topTable(fit.eB,2,p.value=1,number=Inf)}
     tT$IntID<-rownames(tT)
