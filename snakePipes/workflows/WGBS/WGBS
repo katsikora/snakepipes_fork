@@ -17,7 +17,7 @@ import snakePipes.parserCommon as parserCommon
 
 def parse_args(defaults={"verbose": False, "configfile": None, "cluster_configfile":None, "max_jobs": 12, "nthreads": 8, "snakemake_options": "--use-conda", "tempdir": None,
                          "downsample": None, "trimReads": "user", "fqcin": None, "adapterSeq": "AGATCGGAAGAGC", "nextera": False, "trimThreshold": 10, "trimOtherArgs": None, "convrefpath": None,
-                         "convRef": False, "intList": [], "blackList": None, "sampleSheet": None, "mbias_ignore": "auto", "fromBam": False, "bam_ext": ".bam", "skipDOC": False, "skipGCbias": False, "formula": None, "contrast": None}):
+                         "convRef": False, "intList": [], "blackList": None, "sampleSheet": None, "mbias_ignore": "auto", "fromBam": False, "bam_ext": ".bam", "skipDOC": False, "skipGCbias": False, "formula": "", "contrast": ""}):
     """
     Parse arguments from the command line.
     """
@@ -139,7 +139,7 @@ def parse_args(defaults={"verbose": False, "configfile": None, "cluster_configfi
                           action='store',
                           type=str,
                           help="Design formula to use in linear model fit (default: '%(default)s')",
-                          default=defaults["mbias_ignore"])
+                          default=defaults["formula"])
 
     optional.add_argument("--contrast",
                           dest="contrast",
@@ -147,7 +147,7 @@ def parse_args(defaults={"verbose": False, "configfile": None, "cluster_configfi
                           action='store',
                           type=str,
                           help="Contrast to extract the coefficients for (default: '%(default)s')",
-                          default=defaults["mbias_ignore"])
+                          default=defaults["contrast"])
 
     optional.add_argument("--fromBam",
                          dest="fromBam",

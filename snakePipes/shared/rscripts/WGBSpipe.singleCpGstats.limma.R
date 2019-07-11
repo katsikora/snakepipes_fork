@@ -43,54 +43,66 @@ require("ggplot2")
 require("reshape2")
 require(dplyr)
 
+form_input<-commandArgs(trailingOnly=TRUE)[7]
+con_input<-commandArgs(trailingOnly=TRUE)[8]
+print(form_input)
+print(con_input)
+
+
 #calculate and save row means
 limdat.LG.CC.L<-melt(limdat.LG.CC,id.vars="ms",value.name="Beta",variable.name="SampleID")
 limdat.LG.CC.L$SampleID<-as.character(limdat.LG.CC.L$SampleID)
 limdat.LG.CC.L$Group<-sampleSheet$condition[match(limdat.LG.CC.L$SampleID,sampleSheet$name)]
-limdat.LG.CC.Means<-data.table(summarize(group_by(limdat.LG.CC.L,ms,Group),Beta.Mean=mean(Beta)))
 
-print(head(limdat.LG.CC.Means))
+if(is.na(con_input)&is.na(form_input)){
+    
+    limdat.LG.CC.Means<-data.table(summarize(group_by(limdat.LG.CC.L,ms,Group),Beta.Mean=mean(Beta)))
 
-if ("Control" %in% limdat.LG.CC.Means$Group){
-    limdat.LG.CC.Means$Group<-factor(limdat.LG.CC.Means$Group)
-    limdat.LG.CC.Means$Group<-relevel(limdat.LG.CC.Means$Group,ref="Control")
-} else if ("WT" %in% limdat.LG.CC.Means$Group){
-    limdat.LG.CC.Means$Group<-factor(limdat.LG.CC.Means$Group)
-    limdat.LG.CC.Means$Group<-relevel(limdat.LG.CC.Means$Group,ref="WT")
-} else {
-    limdat.LG.CC.Means$Group<-factor(limdat.LG.CC.Means$Group)
-}
 
-##density plots
-ggplot(data=limdat.LG.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Single CpG sites")+
-theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
-ggsave("Beta.MeanXgroup.all.dens.png")
+    if ("Control" %in% limdat.LG.CC.Means$Group){
+        limdat.LG.CC.Means$Group<-factor(limdat.LG.CC.Means$Group)
+        limdat.LG.CC.Means$Group<-relevel(limdat.LG.CC.Means$Group,ref="Control")
+    } else if ("WT" %in% limdat.LG.CC.Means$Group){
+        limdat.LG.CC.Means$Group<-factor(limdat.LG.CC.Means$Group)
+        limdat.LG.CC.Means$Group<-relevel(limdat.LG.CC.Means$Group,ref="WT")
+    } else {
+        limdat.LG.CC.Means$Group<-factor(limdat.LG.CC.Means$Group)
+    }
 
-##violin plots
-ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Single CpG sites")+
-theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
-ggsave("Beta.MeanXgroup.all.violin.png")
 
-print(levels(limdat.LG.CC.Means$Group))
-if(length(levels(limdat.LG.CC.Means$Group))==2){
+    print(head(limdat.LG.CC.Means))
 
-    sink("GroupMean.ttest.txt")
-    limdat.LG.CC.MeansXSample<-data.table(summarize(group_by(limdat.LG.CC.L,SampleID),Beta.Mean=mean(Beta)))
-    limdat.LG.CC.MeansXSample$Beta.Mean.logit<-logit(limdat.LG.CC.MeansXSample$Beta.Mean,percents=FALSE,adjust=0.025)
-    limdat.LG.CC.MeansXSample$Group<-sampleSheet$condition[match(limdat.LG.CC.MeansXSample$SampleID,sampleSheet$name)]
-    print(limdat.LG.CC.MeansXSample)
-    print(t.test(Beta.Mean.logit~Group,data=limdat.LG.CC.MeansXSample,var.equal=TRUE))
-    sink()
+    ##density plots
+    ggplot(data=limdat.LG.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Single CpG sites")+
+    theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
+    ggsave("Beta.MeanXgroup.all.dens.png")
+
+    ##violin plots
+    ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Single CpG sites")+
+    theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
+    ggsave("Beta.MeanXgroup.all.violin.png")
+
+}#end of if con_input and form_input is na
+
+    print(levels(as.factor(limdat.LG.CC.L$Group)))
+if(length(levels(as.factor(limdat.LG.CC.L$Group)))==2){
+
+    if(is.na(con_input)&is.na(form_input)){
+        sink("GroupMean.ttest.txt")
+        limdat.LG.CC.MeansXSample<-data.table(summarize(group_by(limdat.LG.CC.L,SampleID),Beta.Mean=mean(Beta)))
+        limdat.LG.CC.MeansXSample$Beta.Mean.logit<-logit(limdat.LG.CC.MeansXSample$Beta.Mean,percents=FALSE,adjust=0.025)
+        limdat.LG.CC.MeansXSample$Group<-sampleSheet$condition[match(limdat.LG.CC.MeansXSample$SampleID,sampleSheet$name)]
+        print(limdat.LG.CC.MeansXSample)
+        print(t.test(Beta.Mean.logit~Group,data=limdat.LG.CC.MeansXSample,var.equal=TRUE))
+        sink()
+    }#end of if con_input and form_input is na
 
 
 
     #limma
-    form_input<-commandArgs(trailingOnly=TRUE)[7]
-    con_input<-commandArgs(trailingOnly=TRUE)[8]
-    print(form_input)
-    print(con_input)
+    
 
-    if(form_input==""){
+    if(is.na(form_input)){
       design<-as.data.frame(matrix(ncol=2,nrow=(ncol(limdat.LG.CC.logit))),stringsAsFactors=FALSE)
       colnames(design)<-c("Intercept","Group")
       rownames(design)<-colnames(limdat.LG.CC.logit)
@@ -114,7 +126,7 @@ if(length(levels(limdat.LG.CC.Means$Group))==2){
 
     fit<-lmFit(limdat.LG.CC.logit,design)
 
-    if(con_input!=""){
+    if(!is.na(con_input)){
         ContMatrix<-makeContrasts(noquote(con_input),levels=design)
         print(ContMatrix)
         fit<-contrasts.fit(fit,ContMatrix)
@@ -123,11 +135,72 @@ if(length(levels(limdat.LG.CC.Means$Group))==2){
 
     fit.eB<-eBayes(fit)
 
+###recalculate absolute differences using design/contrast matrix
+    if(is.na(con_input)&!is.na(form_input)){
+        limdat.LG.CC.L$Group<-"Control"
+        limdat.LG.CC.L$Group[limdat.LG.CC.L$SampleID %in% rownames(design)[design[,ncol(design)]==1]]<-"Treatment"
+        limdat.LG.CC.Means<-data.table(summarize(group_by(limdat.LG.CC.L,ms,Group),Beta.Mean=mean(Beta)))
+        
+        print(head(limdat.LG.CC.Means))
+
+        ##density plots
+        ggplot(data=limdat.LG.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Single CpG sites")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave("Beta.MeanXgroup.all.dens.png")
+
+        ##violin plots
+        ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Single CpG sites")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave("Beta.MeanXgroup.all.violin.png")
+
+        sink("GroupMean.ttest.txt")
+        limdat.LG.CC.MeansXSample<-data.table(summarize(group_by(limdat.LG.CC.L,SampleID),Beta.Mean=mean(Beta)))
+        limdat.LG.CC.MeansXSample$Beta.Mean.logit<-logit(limdat.LG.CC.MeansXSample$Beta.Mean,percents=FALSE,adjust=0.025)
+        limdat.LG.CC.MeansXSample$Group<-limdat.LG.CC.L$Group[match(limdat.LG.CC.MeansXSample$SampleID,limdat.LG.CC.L$SampleID)]
+        print(limdat.LG.CC.MeansXSample)
+        print(t.test(Beta.Mean.logit~Group,data=limdat.LG.CC.MeansXSample,var.equal=TRUE))
+        sink()
+
+}else if(!is.na(con_input)&!is.na(form_input)){
+        ctrl<-rownames(design)[design[,match(unlist(strsplit(con_input,split="-"))[2],colnames(design))]==1]
+        print(ctrl)
+        treat<-rownames(design)[design[,match(unlist(strsplit(con_input,split="-"))[1],colnames(design))]==1]
+        print(treat)
+        limdat.LG.CC.L<-limdat.LG.CC.L[limdat.LG.CC.L$SampleID %in% c(ctrl,treat),]
+        limdat.LG.CC.L$Group<-"Control"
+        limdat.LG.CC.L$Group[limdat.LG.CC.L$SampleID %in% treat]<-"Treatment"
+        limdat.LG.CC.Means<-data.table(summarize(group_by(limdat.LG.CC.L,ms,Group),Beta.Mean=mean(Beta)))
+        
+        print(head(limdat.LG.CC.Means))
+
+        ##density plots
+        ggplot(data=limdat.LG.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Single CpG sites")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave("Beta.MeanXgroup.all.dens.png")
+
+        ##violin plots
+        ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Single CpG sites")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave("Beta.MeanXgroup.all.violin.png")
+
+        sink("GroupMean.ttest.txt")
+        limdat.LG.CC.MeansXSample<-data.table(summarize(group_by(limdat.LG.CC.L,SampleID),Beta.Mean=mean(Beta)))
+        limdat.LG.CC.MeansXSample$Beta.Mean.logit<-logit(limdat.LG.CC.MeansXSample$Beta.Mean,percents=FALSE,adjust=0.025)
+        limdat.LG.CC.MeansXSample$Group<-limdat.LG.CC.L$Group[match(limdat.LG.CC.MeansXSample$SampleID,limdat.LG.CC.L$SampleID)]
+        print(limdat.LG.CC.MeansXSample)
+        print(t.test(Beta.Mean.logit~Group,data=limdat.LG.CC.MeansXSample,var.equal=TRUE))
+        sink()
+
+}
+
+
+
 ##read filters from commandline args
     minAbsDiff<-as.numeric(commandArgs(trailingOnly=TRUE)[4])
     fdr<-as.numeric(commandArgs(trailingOnly=TRUE)[5])
     
-    if(con_input!=""){tT<-topTable(fit.eB,con_input,p.value=1,number=Inf)}else{tT<-topTable(fit.eB,2,p.value=1,number=Inf)}
+    if(!is.na(con_input)){tT<-topTable(fit.eB,con_input,p.value=1,number=Inf)}else{tT<-topTable(fit.eB,ncol(design),p.value=1,number=Inf)}
+    print(str(tT))
     tT$IntID<-rownames(tT)
     plotdat<-melt(tT,measure.vars=c("P.Value","adj.P.Val"),value.name="pval",variable.name="Category",id.vars="IntID")
 
@@ -135,9 +208,11 @@ if(length(levels(limdat.LG.CC.Means$Group))==2){
     ggsave("SingleCpG_pvalue.distribution.png")
 
 ### annotate top table with mean difference
+### make use of contrasts to calculate Diff
     meandatW<-dcast(data=limdat.LG.CC.Means,ms~Group,value.var="Beta.Mean")
-    if(sum(c("Control","Treatment") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Treatment-Control)}
-    if(sum(c("WT","Mut") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Mut-WT)}else{meandatW$Diff<-meandatW[,2]-meandatW[,3]}
+    print(head(meandatW))
+
+    if(sum(c("Control","Treatment") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Treatment-Control)}else if(sum(c("WT","Mut") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Mut-WT)}else{meandatW$Diff<-meandatW[,2]-meandatW[,3]}
     tT$Diff<-meandatW$Diff[match(tT$IntID,meandatW$ms)]
 
     tT$Filter<-"Fail"

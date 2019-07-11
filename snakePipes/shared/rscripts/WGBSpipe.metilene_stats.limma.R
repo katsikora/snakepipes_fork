@@ -136,7 +136,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         form_input<-commandArgs(trailingOnly=TRUE)[9]
         con_input<-commandArgs(trailingOnly=TRUE)[10]
         
-        if(form_input==""){
+        if(is.na(form_input)){
           design<-as.data.frame(matrix(ncol=2,nrow=(ncol(CGI.limdat.CC.logit))),stringsAsFactors=FALSE)
           colnames(design)<-c("Intercept","Group")
           rownames(design)<-colnames(CGI.limdat.CC.logit)
@@ -158,7 +158,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
 
         fit<-lmFit(CGI.limdat.CC.logit,design)
 
-        if(con_input!=""){
+        if(!is.na(con_input)){
             ContMatrix<-makeContrasts(noquote(con_input),levels=design)
             print(ContMatrix)
             fit<-contrasts.fit(fit,ContMatrix)
@@ -170,7 +170,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         minAbsDiff<-as.numeric(commandArgs(trailingOnly=TRUE)[6])
         fdr<-as.numeric(commandArgs(trailingOnly=TRUE)[7])
     
-        if(con_input!=""){tT<-topTable(fit.eB,con_input,p.value=1,number=Inf)}else{tT<-topTable(fit.eB,2,p.value=1,number=Inf)}
+        if(!is.na(con_input)){tT<-topTable(fit.eB,con_input,p.value=1,number=Inf)}else{tT<-topTable(fit.eB,2,p.value=1,number=Inf)}
         tT$IntID<-rownames(tT)
         plotdat<-melt(tT,measure.vars=c("P.Value","adj.P.Val"),value.name="pval",variable.name="Category",id.vars="IntID")
 
