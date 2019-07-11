@@ -97,6 +97,11 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         library("ggplot2")
         library("dplyr")
 
+        form_input<-commandArgs(trailingOnly=TRUE)[9]
+        con_input<-commandArgs(trailingOnly=TRUE)[10]
+        print(form_input)
+        print(con_input)
+
         CGI.limdat.CC.logit<-logit(CGI.limdat.CC,percents=FALSE,adjust=0.025)
         x1<-PCA(CGI.limdat.CC,graph=FALSE)
 
@@ -110,32 +115,34 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         sampleSheet<-read.table(spath,header=TRUE,sep="\t",as.is=TRUE)
     #calculate and save row means
         CGI.limdat.CC$IntID<-rownames(CGI.limdat.CC)
+        save(CGI.limdat.CC,file="CGI.limdat.CC.RData")
         CGI.limdat.CC.L<-melt(CGI.limdat.CC,id.vars="IntID",value.name="Beta",variable.name="SampleID")
         CGI.limdat.CC.L$Group<-sampleSheet$condition[match(CGI.limdat.CC.L$SampleID,sampleSheet$name)]
-        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
-        save(CGI.limdat.CC,file="CGI.limdat.CC.RData")
 
-    if ("Control" %in% CGI.limdat.CC.Means$Group){
-            CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)
-            CGI.limdat.CC.Means$Group<-relevel(CGI.limdat.CC.Means$Group,ref="Control")}
-       if ("WT" %in% CGI.limdat.CC.Means$Group){
-            CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)
-            CGI.limdat.CC.Means$Group<-relevel(CGI.limdat.CC.Means$Group,ref="WT")}
+        if(is.na(con_input)&is.na(form_input)){
 
-    ##density plots
-        ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Differentially methylated regions")+
-    theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))+xlim(0,1)
-        ggsave(paste0(bedshort,".Beta.MeanXgroup.metilene.dens.png"))
+            CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
+            
+            if ("Control" %in% CGI.limdat.CC.Means$Group){
+                    CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)
+                    CGI.limdat.CC.Means$Group<-relevel(CGI.limdat.CC.Means$Group,ref="Control")}else if ("WT" %in% CGI.limdat.CC.Means$Group){
+                    CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)
+                    CGI.limdat.CC.Means$Group<-relevel(CGI.limdat.CC.Means$Group,ref="WT")}
 
-    ##violin plots
-        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Differentially methylated regions")+
-    theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+ylim(0,1)
-        ggsave(paste0(bedshort,".Beta.MeanXgroup.metilene.violin.png"))
+            ##density plots
+            ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Differentially methylated regions")+
+            theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))+xlim(0,1)
+            ggsave(paste0(bedshort,".Beta.MeanXgroup.metilene.dens.png"))
+
+            ##violin plots
+            ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Differentially methylated regions")+
+            theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+ylim(0,1)
+            ggsave(paste0(bedshort,".Beta.MeanXgroup.metilene.violin.png"))
+
+        }#end of if con_input and form_input is na
 
     #differential methylation
-        form_input<-commandArgs(trailingOnly=TRUE)[9]
-        con_input<-commandArgs(trailingOnly=TRUE)[10]
-        
+                
         if(is.na(form_input)){
           design<-as.data.frame(matrix(ncol=2,nrow=(ncol(CGI.limdat.CC.logit))),stringsAsFactors=FALSE)
           colnames(design)<-c("Intercept","Group")
@@ -166,6 +173,51 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
 
         fit.eB<-eBayes(fit)
 
+        ###recalculate absolute differences using design/contrast matrix
+    if(is.na(con_input)&!is.na(form_input)){
+        CGI.limdat.CC.L$Group<-"Control"
+        CGI.limdat.CC.L$Group[CGI.limdat.CC.L$SampleID %in% rownames(design)[design[,ncol(design)]==1]]<-"Treatment"
+        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
+        
+        print(head(CGI.limdat.CC.Means))
+
+        ##density plots
+        ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Differentially methylated regions")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave("Beta.MeanXgroup.metilene.dens.png")
+
+        ##violin plots
+        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Differentially methylated regions")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave("Beta.MeanXgroup.metilene.violin.png")
+
+        }else if(!is.na(con_input)&!is.na(form_input)){
+        ctrl<-rownames(design)[design[,match(unlist(strsplit(con_input,split="-"))[2],colnames(design))]==1]
+        print(ctrl)
+        treat<-rownames(design)[design[,match(unlist(strsplit(con_input,split="-"))[1],colnames(design))]==1]
+        print(treat)
+        CGI.limdat.CC.L<-CGI.limdat.CC.L[CGI.limdat.CC.L$SampleID %in% c(ctrl,treat),]
+        CGI.limdat.CC.L$Group<-"Control"
+        CGI.limdat.CC.L$Group[CGI.limdat.CC.L$SampleID %in% treat]<-"Treatment"
+        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
+        
+        print(head(CGI.limdat.CC.Means))
+
+        ##density plots
+        ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Differentially methylated regions")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave("Beta.MeanXgroup.metilene.dens.png")
+
+        ##violin plots
+        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("v")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave("Beta.MeanXgroup.metilene.violin.png")
+
+        }
+
+
+
+
         ##read filters from commandline args
         minAbsDiff<-as.numeric(commandArgs(trailingOnly=TRUE)[6])
         fdr<-as.numeric(commandArgs(trailingOnly=TRUE)[7])
@@ -179,6 +231,8 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
 
 ### annotate top table with mean difference
         meandatW<-dcast(data=CGI.limdat.CC.Means,IntID~Group,value.var="Beta.Mean")
+        print(head(meandatW))
+
         if(sum(c("Control","Treatment") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Treatment-Control)} else if(sum(c("WT","Mut") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Mut-WT)}else{meandatW$Diff<-meandatW[,2]-meandatW[,3]}
 
         tT$Diff<-meandatW$Diff[match(rownames(tT),meandatW$IntID)]

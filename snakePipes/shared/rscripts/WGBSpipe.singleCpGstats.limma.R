@@ -109,8 +109,7 @@ if(length(levels(as.factor(limdat.LG.CC.L$Group)))==2){
       if("Control" %in% sampleSheet$condition){
         gp<-factor(sampleSheet$condition[match(colnames(limdat.LG.CC.logit),sampleSheet$name)])
         gp<-relevel(gp,ref="Control")
-        design$Group<-as.numeric(gp)}
-      else if("WT" %in% sampleSheet$condition){
+        design$Group<-as.numeric(gp)}else if("WT" %in% sampleSheet$condition){
         gp<-factor(sampleSheet$condition[match(colnames(limdat.LG.CC.logit),sampleSheet$name)])
         gp<-relevel(gp,ref="WT")
         design$Group<-as.numeric(gp)}else{design$Group<-as.numeric(factor(sampleSheet$condition))}
