@@ -99,6 +99,11 @@ if(nrow(bedtab.CC)==0) {print_sessionInfo("None of the genomic intervals passed 
     require("ggplot2")
     require("dplyr")
 
+    form_input<-commandArgs(trailingOnly=TRUE)[9]
+    con_input<-commandArgs(trailingOnly=TRUE)[10]
+    print(form_input)
+    print(con_input)
+
     CGI.limdat.CC.logit<-logit(CGI.limdat.CC,percents=FALSE,adjust=0.025)
     x1<-PCA(CGI.limdat.CC,graph=FALSE)
 
@@ -112,56 +117,115 @@ if(nrow(bedtab.CC)==0) {print_sessionInfo("None of the genomic intervals passed 
     sampleSheet<-read.table(spath,header=TRUE,sep="\t",as.is=TRUE)
 #calculate and save row means
     CGI.limdat.CC$IntID<-rownames(CGI.limdat.CC)
+    save(CGI.limdat.CC,file=paste0(bedshort,".limdat.CC.RData"))
+
     CGI.limdat.CC.L<-melt(CGI.limdat.CC,id.vars="IntID",value.name="Beta",variable.name="SampleID")
     CGI.limdat.CC.L$Group<-sampleSheet$condition[match(CGI.limdat.CC.L$SampleID,sampleSheet$name)]
-    CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
+
+    if(is.na(con_input)&is.na(form_input)){
+        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
 
 
-   if ("Control" %in% CGI.limdat.CC.Means$Group){
-        CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)
-        CGI.limdat.CC.Means$Group<-relevel(CGI.limdat.CC.Means$Group,ref="Control")}
-   else if ("WT" %in% CGI.limdat.CC.Means$Group){
-        CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)
-        CGI.limdat.CC.Means$Group<-relevel(CGI.limdat.CC.Means$Group,ref="WT")}
-   else {CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)}
+       if ("Control" %in% CGI.limdat.CC.Means$Group){
+            CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)
+            CGI.limdat.CC.Means$Group<-relevel(CGI.limdat.CC.Means$Group,ref="Control")} else if ("WT" %in% CGI.limdat.CC.Means$Group){
+            CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)
+            CGI.limdat.CC.Means$Group<-relevel(CGI.limdat.CC.Means$Group,ref="WT")}else {CGI.limdat.CC.Means$Group<-factor(CGI.limdat.CC.Means$Group)}
 
 
-##density plots
-    ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Genomic intervals")+
-    theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
-    ggsave(paste0(bedshort,".Beta.MeanXgroup.int.dens.png"))
+        ##density plots
+        ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Genomic intervals")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave(paste0(bedshort,".Beta.MeanXgroup.int.dens.png"))
 
-##violin plots
-    ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Genomic intervals")+
-    theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
-    ggsave(paste0(bedshort,".Beta.MeanXgroup.int.violin.png"))
+        ##violin plots
+        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Genomic intervals")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave(paste0(bedshort,".Beta.MeanXgroup.int.violin.png"))
 
-    if(length(levels(CGI.limdat.CC.Means$Group))==2){
-#differential methylation
-        design<-as.data.frame(matrix(ncol=2,nrow=(ncol(CGI.limdat.CC.logit))),stringsAsFactors=FALSE)
-        colnames(design)<-c("Intercept","Group")
-        rownames(design)<-colnames(CGI.limdat.CC.logit)
-        if("Control" %in% sampleSheet$condition){
-            gp<-factor(sampleSheet$condition[match(colnames(CGI.limdat.CC.logit),sampleSheet$name)])
-            gp<-relevel(gp,ref="Control")
-            design$Group<-as.numeric(gp)}
-        if("WT" %in% sampleSheet$condition){
-            gp<-factor(sampleSheet$condition[match(colnames(CGI.limdat.CC.logit),sampleSheet$name)])
-            gp<-relevel(gp,ref="WT")
-            design$Group<-as.numeric(gp)}
-        else{design$Group<-as.numeric(factor(sampleSheet$condition))}
-        design$Intercept<-1
-        design<-as.matrix(design)
+     }#end of if con_input and form_input is na
+
+    print(levels(as.factor(CGI.limdat.CC.L$Group)))
+    if(length(levels(as.factor(CGI.limdat.CC.L$Group)))==2){
+
+    #differential methylation
+        if(is.na(form_input)){
+            design<-as.data.frame(matrix(ncol=2,nrow=(ncol(CGI.limdat.CC.logit))),stringsAsFactors=FALSE)
+            colnames(design)<-c("Intercept","Group")
+            rownames(design)<-colnames(CGI.limdat.CC.logit)
+            if("Control" %in% sampleSheet$condition){
+                gp<-factor(sampleSheet$condition[match(colnames(CGI.limdat.CC.logit),sampleSheet$name)])
+                gp<-relevel(gp,ref="Control")
+                design$Group<-as.numeric(gp)} else if("WT" %in% sampleSheet$condition){
+                gp<-factor(sampleSheet$condition[match(colnames(CGI.limdat.CC.logit),sampleSheet$name)])
+                gp<-relevel(gp,ref="WT")
+                design$Group<-as.numeric(gp)} else{design$Group<-as.numeric(factor(sampleSheet$condition))}
+            design$Intercept<-1
+            design<-as.matrix(design)}else{
+        f<-as.formula(form_input)
+        design<-model.matrix(f,sampleSheet)
+        colnames(design)=gsub(':','_',colnames(design))}
 
         fit<-lmFit(CGI.limdat.CC.logit,design)
-        fit.eB<-eBayes(fit)
 
+        if(!is.na(con_input)){
+            ContMatrix<-makeContrasts(noquote(con_input),levels=design)
+            print(ContMatrix)
+            fit<-contrasts.fit(fit,ContMatrix)
+        }
+
+        fit.eB<-eBayes(fit)
+        
+        ###recalculate absolute differences using design/contrast matrix
+    if(is.na(con_input)&!is.na(form_input)){
+        CGI.limdat.CC.L$Group<-"Control"
+        CGI.limdat.CC.L$Group[CGI.limdat.CC.L$SampleID %in% rownames(design)[design[,ncol(design)]==1]]<-"Treatment"
+        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
+
+        print(head(CGI.limdat.CC.Means))
+
+        ##density plots
+        ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Genomic intervals")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave(paste0(bedshort,".Beta.MeanXgroup.int.dens.png"))
+
+        ##violin plots
+        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Genomic intervals")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave(paste0(bedshort,".Beta.MeanXgroup.int.violin.png"))
+
+        
+}else if(!is.na(con_input)&!is.na(form_input)){
+        ctrl<-rownames(design)[design[,match(unlist(strsplit(con_input,split="-"))[2],colnames(design))]==1]
+        print(ctrl)
+        treat<-rownames(design)[design[,match(unlist(strsplit(con_input,split="-"))[1],colnames(design))]==1]
+        print(treat)
+        CGI.limdat.CC.L<-CGI.limdat.CC.L[CGI.limdat.CC.L$SampleID %in% c(ctrl,treat),]
+        CGI.limdat.CC.L$Group<-"Control"
+        CGI.limdat.CC.L$Group[CGI.limdat.CC.L$SampleID %in% treat]<-"Treatment"
+        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
+
+        print(head(CGI.limdat.CC.Means))
+
+        ##density plots
+        ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Genomic intervals")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave(paste0(bedshort,".Beta.MeanXgroup.int.dens.png"))
+
+        ##violin plots
+        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Genomic intervals")+
+        theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
+        ggsave(paste0(bedshort,".Beta.MeanXgroup.int.violin.png"))
+
+        
+}
 
         ##read filters from commandline args
         minAbsDiff<-as.numeric(commandArgs(trailingOnly=TRUE)[6])
         fdr<-as.numeric(commandArgs(trailingOnly=TRUE)[7])
     
-        tT<-topTable(fit.eB,2,p.value=1,number=Inf)
+        if(!is.na(con_input)){tT<-topTable(fit.eB,con_input,p.value=1,number=Inf)}else{tT<-topTable(fit.eB,2,p.value=1,number=Inf)}
+
         tT$IntID<-rownames(tT)
         plotdat<-melt(tT,measure.vars=c("P.Value","adj.P.Val"),value.name="pval",variable.name="Category",id.vars="IntID")
 
@@ -170,8 +234,9 @@ if(nrow(bedtab.CC)==0) {print_sessionInfo("None of the genomic intervals passed 
 
 ### annotate top table with mean difference
         meandatW<-dcast(data=CGI.limdat.CC.Means,IntID~Group,value.var="Beta.Mean")
-        if(sum(c("Control","Treatment") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Treatment-Control)}
-        if(sum(c("WT","Mut") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Mut-WT)}else{meandatW$Diff<-meandatW[,2]-meandatW[,3]}
+        print(head(meandatW))
+
+        if(sum(c("Control","Treatment") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Treatment-Control)}else if(sum(c("WT","Mut") %in% colnames(meandatW))==2){meandatW$Diff<-with(meandatW,Mut-WT)}else{meandatW$Diff<-meandatW[,2]-meandatW[,3]}
 
         tT$Diff<-meandatW$Diff[match(rownames(tT),meandatW$IntID)]
 
