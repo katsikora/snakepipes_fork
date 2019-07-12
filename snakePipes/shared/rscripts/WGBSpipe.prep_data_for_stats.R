@@ -28,6 +28,7 @@ mshort<-gsub(".CpG.filt2.bed","",basename(mdir))
 
 
 require(data.table)
+library(limma)
 
 mlist<-vector("list",length(mdir))
 for(i in seq_along(mdir)){
@@ -50,15 +51,43 @@ if(nrow(limdat.LG.CC)==0){ print_sessionInfo("None of the single CpG sites passe
 
     #### prepare metilene input
 
-    limdat.LG.CC.tw<-limdat.LG.CC
+    form_input<-commandArgs(trailingOnly=TRUE)[5]
+    con_input<-commandArgs(trailingOnly=TRUE)[6]
+    print(form_input)
+    print(con_input)
 
-    ##reorder input data so that Treatment or WT go first
-    if ("Mut" %in% sampleSheet$condition){
+    if(is.na(form_input)){
+        limdat.LG.CC.tw<-limdat.LG.CC
+
+        ##reorder input data so that Treatment or WT go first
+        if ("Mut" %in% sampleSheet$condition){
         limdat.LG.CC.tw<-limdat.LG.CC[,c("ms",colnames(limdat.LG.CC)[match(sampleSheet$name[sampleSheet$condition %in% "Mut"],colnames(limdat.LG.CC))],colnames(limdat.LG.CC)[match(sampleSheet$name[!sampleSheet$condition %in% "Mut"],colnames(limdat.LG.CC))]),with=FALSE]
-        }
-    else if ("Treatment" %in% sampleSheet$condition){
+        } else if ("Treatment" %in% sampleSheet$condition){
+            limdat.LG.CC.tw<-limdat.LG.CC[,c("ms",colnames(limdat.LG.CC)[match(sampleSheet$name[sampleSheet$condition %in% "Treatment"],colnames(limdat.LG.CC))],colnames(limdat.LG.CC)[match(sampleSheet$name[!sampleSheet$condition %in% "Treatment"],colnames(limdat.LG.CC))]),with=FALSE]}
+
+    } else if(is.na(con_input)&!is.na(form_input)){
+        f<-as.formula(form_input)
+        design<-model.matrix(f,sampleSheet)
+        colnames(design)=gsub(':','_',colnames(design))
+        sampleSheet$condition<-"Control"
+        sampleSheet$condition[sampleSheet$name %in% rownames(design)[design[,ncol(design)]==1]]<-"Treatment"
         limdat.LG.CC.tw<-limdat.LG.CC[,c("ms",colnames(limdat.LG.CC)[match(sampleSheet$name[sampleSheet$condition %in% "Treatment"],colnames(limdat.LG.CC))],colnames(limdat.LG.CC)[match(sampleSheet$name[!sampleSheet$condition %in% "Treatment"],colnames(limdat.LG.CC))]),with=FALSE]
-        }
+    } else if(!is.na(con_input)&!is.na(form_input)){
+        f<-as.formula(form_input)
+        design<-model.matrix(f,sampleSheet)
+        colnames(design)=gsub(':','_',colnames(design))
+        ContMatrix<-makeContrasts(noquote(con_input),levels=design)
+        print(ContMatrix)
+        ctrl<-rownames(design)[design[,match(unlist(strsplit(con_input,split="-"))[2],colnames(design))]==1]
+        print(ctrl)
+        treat<-rownames(design)[design[,match(unlist(strsplit(con_input,split="-"))[1],colnames(design))]==1]
+        print(treat)
+        sampleSheet<-sampleSheet[sampleSheet$name %in% c(ctrl,treat),]
+        sampleSheet$condition<-"Control"
+        sampleSheet$condition[sampleSheet$name %in% treat]<-"Treatment"
+        limdat.LG.CC.tw<-limdat.LG.CC[,c("ms",colnames(limdat.LG.CC)[match(sampleSheet$name[sampleSheet$condition %in% "Treatment"],colnames(limdat.LG.CC))],colnames(limdat.LG.CC)[match(sampleSheet$name[!sampleSheet$condition %in% "Treatment"],colnames(limdat.LG.CC))]),with=FALSE]
+
+    }
 
     limdat.LG.CC.tw$chr<-gsub("_.+","",limdat.LG.CC.tw$ms)
     limdat.LG.CC.tw$pos<-gsub(".+_","",limdat.LG.CC.tw$ms)

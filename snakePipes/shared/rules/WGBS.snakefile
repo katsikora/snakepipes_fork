@@ -541,13 +541,15 @@ if sampleSheet:
         params:
             statdir=os.path.join(outdir,'{}'.format(get_outdir("merged_methylation_data"))),
             sampleSheet=sampleSheet,
-            importfunc = os.path.join(workflow_rscripts, "WGBSstats_functions.R")
+            importfunc = os.path.join(workflow_rscripts, "WGBSstats_functions.R"),
+            formula=formula if formula else "",
+            contrast=contrast if contrast else ""
         log:
             err='{}/logs/prep_for_stats.err'.format(get_outdir("singleCpG_stats_limma")),
             out='{}/logs/prep_for_stats.out'.format(get_outdir("singleCpG_stats_limma"))
         threads: 1
         conda: CONDA_WGBS_ENV
-        shell: "Rscript --no-save --no-restore " + os.path.join(workflow_rscripts,'WGBSpipe.prep_data_for_stats.R ') + "{params.statdir} {params.sampleSheet} "  + os.path.join(outdir,"methXT") + " {params.importfunc} 1>{log.out} 2>{log.err}"
+        shell: "Rscript --no-save --no-restore " + os.path.join(workflow_rscripts,'WGBSpipe.prep_data_for_stats.R ') + "{params.statdir} {params.sampleSheet} "  + os.path.join(outdir,"methXT") + " {params.importfunc} {params.formula} {params.contrast} 1>{log.out} 2>{log.err}"
 
 
     rule CpG_stats:
