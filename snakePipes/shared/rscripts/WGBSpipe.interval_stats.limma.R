@@ -123,7 +123,7 @@ if(nrow(bedtab.CC)==0) {print_sessionInfo("None of the genomic intervals passed 
     CGI.limdat.CC.L$Group<-sampleSheet$condition[match(CGI.limdat.CC.L$SampleID,sampleSheet$name)]
 
     if(is.na(con_input)&is.na(form_input)){
-        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
+        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta,na.rm=TRUE)))
 
 
        if ("Control" %in% CGI.limdat.CC.Means$Group){
@@ -180,7 +180,7 @@ if(nrow(bedtab.CC)==0) {print_sessionInfo("None of the genomic intervals passed 
     if(is.na(con_input)&!is.na(form_input)){
         CGI.limdat.CC.L$Group<-"Control"
         CGI.limdat.CC.L$Group[CGI.limdat.CC.L$SampleID %in% rownames(design)[design[,ncol(design)]==1]]<-"Treatment"
-        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
+        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta,na.rm=TRUE)))
 
         print(head(CGI.limdat.CC.Means))
 
@@ -203,7 +203,7 @@ if(nrow(bedtab.CC)==0) {print_sessionInfo("None of the genomic intervals passed 
         CGI.limdat.CC.L<-CGI.limdat.CC.L[CGI.limdat.CC.L$SampleID %in% c(ctrl,treat),]
         CGI.limdat.CC.L$Group<-"Control"
         CGI.limdat.CC.L$Group[CGI.limdat.CC.L$SampleID %in% treat]<-"Treatment"
-        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta)))
+        CGI.limdat.CC.Means<-data.table(summarize(group_by(CGI.limdat.CC.L,IntID,Group),Beta.Mean=mean(Beta,na.rm=TRUE)))
 
         print(head(CGI.limdat.CC.Means))
 
@@ -249,7 +249,7 @@ if(nrow(bedtab.CC)==0) {print_sessionInfo("None of the genomic intervals passed 
 
 #### filter top table according to thresholds
 
-        tT_filt<-tT[tT$adj.P.Val<fdr & abs(tT$Diff)>=minAbsDiff,]  
+        tT_filt<-tT[tT$adj.P.Val<fdr&abs(tT$Diff)>=minAbsDiff,]  
 
         if(nrow(tT_filt)==0) {print_sessionInfo("No genomic intervals were significantly differentially methylated.")
             save(bedtab,limdat.LG.inCGI,CGI.limdat.CC,CGI.limdat.CC.Means,file=paste0(bedshort,".aggCpG.RData"))
@@ -262,6 +262,7 @@ if(nrow(bedtab.CC)==0) {print_sessionInfo("None of the genomic intervals passed 
             nrow(tT_filt)/nrow(CGI.limdat.CC.logit)
 
             save(bedtab,limdat.LG.inCGI,CGI.limdat.CC,CGI.limdat.CC.Means,tT_filt,file=paste0(bedshort,".aggCpG.RData"))
+            save(tT,file=paste0(bedshort,".tT.RData"))
         print_sessionInfo("Analysis completed succesfully.")
         }###end if topTable has at least 1 entry
     } else {print_sessionInfo('More than 2 sample groups were provided. No statistical inference will be computed.')}### end if exactly two sample groups were specified

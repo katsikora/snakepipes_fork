@@ -133,6 +133,22 @@ def parse_args(defaults={"verbose": False, "configfile": None, "cluster_configfi
                           help="Number of nucleotides with methylation bias to ignore during methylation extraction. In the *auto* mode this number is automaticaly calculated by MethylDackel (default: '%(default)s')",
                           default=defaults["mbias_ignore"])
 
+    optional.add_argument("--FDR",
+                          dest="FDR",
+                          metavar="STR",
+                          action='store',
+                          type=str,
+                          help="FDR to filter differential analysis results for (default: '%(default)s')",
+                          default=defaults["FDR"])
+
+    optional.add_argument("--minAbsDiff",
+                          dest="minAbsDiff",
+                          metavar="STR",
+                          action='store',
+                          type=str,
+                          help="Absolute difference in methylation ratios to filter differential analysis results for (default: '%(default)s')",
+                          default=defaults["minAbsDiff"])
+
     optional.add_argument("--formula",
                           dest="formula",
                           metavar="STR",
