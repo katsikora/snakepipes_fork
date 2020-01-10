@@ -78,7 +78,7 @@ if(is.na(con_input)&is.na(form_input)){
     ggsave("Beta.MeanXgroup.all.dens.png")
 
     ##violin plots
-    ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Single CpG sites")+
+    ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+ggtitle("Single CpG sites")+
     theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
     ggsave("Beta.MeanXgroup.all.violin.png")
 
@@ -148,7 +148,7 @@ if(length(levels(as.factor(limdat.LG.CC.L$Group)))==2){
         ggsave("Beta.MeanXgroup.all.dens.png")
 
         ##violin plots
-        ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Single CpG sites")+
+        ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+ggtitle("Single CpG sites")+
         theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
         ggsave("Beta.MeanXgroup.all.violin.png")
 
@@ -178,7 +178,7 @@ if(length(levels(as.factor(limdat.LG.CC.L$Group)))==2){
         ggsave("Beta.MeanXgroup.all.dens.png")
 
         ##violin plots
-        ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Single CpG sites")+
+        ggplot(data=limdat.LG.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+ggtitle("Single CpG sites")+
         theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
         ggsave("Beta.MeanXgroup.all.violin.png")
 

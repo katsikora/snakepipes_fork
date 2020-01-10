@@ -135,7 +135,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
             ggsave(paste0(bedshort,".Beta.MeanXgroup.metilene.dens.png"))
 
             ##violin plots
-            ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Differentially methylated regions")+
+            ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+ggtitle("Differentially methylated regions")+
             theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+ylim(0,1)
             ggsave(paste0(bedshort,".Beta.MeanXgroup.metilene.violin.png"))
 
@@ -187,7 +187,7 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         ggsave("Beta.MeanXgroup.metilene.dens.png")
 
         ##violin plots
-        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("Differentially methylated regions")+
+        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+ggtitle("Differentially methylated regions")+
         theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
         ggsave("Beta.MeanXgroup.metilene.violin.png")
 
@@ -204,12 +204,12 @@ if (length(readLines(bedF))==0) {print_sessionInfo("No DMRs found.")}else{
         print(head(CGI.limdat.CC.Means))
 
         ##density plots
-        ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("Differentially methylated regions")+
+        ggplot(data=CGI.limdat.CC.Means,aes(x=Beta.Mean))+geom_density(aes(group=Group,colour=Group,fill=Group),alpha=0.3)+ggtitle("")+
         theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))+scale_colour_manual(values=c("grey28","red","darkblue","darkgreen"))
         ggsave("Beta.MeanXgroup.metilene.dens.png")
 
         ##violin plots
-        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+geom_boxplot(aes(x=Group,y=Beta.Mean),width=0.1)+ggtitle("v")+
+        ggplot(data=CGI.limdat.CC.Means)+geom_violin(aes(x=Group,y=Beta.Mean,fill=Group))+ggtitle("Differentially methylated regions")+
         theme(text = element_text(size=16),axis.text = element_text(size=12),axis.title = element_text(size=14),axis.text.x = element_text(angle = 90, hjust = 1))+xlab("Mean methylation ratio")+scale_fill_manual(values=c("grey28","red","darkblue","darkgreen"))
         ggsave("Beta.MeanXgroup.metilene.violin.png")
 
